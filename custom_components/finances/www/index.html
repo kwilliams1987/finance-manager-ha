@@ -1,0 +1,199 @@
+<!doctype html>
+<html class="unsupported">
+    <head>
+        <title class="translate">Finances</title>
+        <link rel="stylesheet" href="css/layout.css">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="apple-touch-icon" sizes="180x180" href="apps/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="apps/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="194x194" href="apps/favicon-194x194.png">
+        <link rel="icon" type="image/png" sizes="192x192" href="apps/android-chrome-192x192.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="apps/favicon-16x16.png">
+        <link rel="manifest" href="apps/manifest.json">
+        <link rel="mask-icon" href="apps/safari-pinned-tab.svg" color="#5bbad5">
+        <link rel="shortcut icon" href="apps/favicon.ico">
+        <meta name="apple-mobile-web-app-title" content="Finances">
+        <meta name="application-name" content="Finances">
+        <meta name="msapplication-TileColor" content="#2d89ef">
+        <meta name="msapplication-TileImage" content="apps/mstile-144x144.png">
+        <meta name="msapplication-config" content="apps/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+
+        <script>document.documentElement.classList.remove('unsupported');</script>
+    </head>
+
+    <body>
+        <aside role="region">
+            <div>
+                <h1 class="translate">Finances</h1>
+                <div class="summary-item month-item">
+                    <label for="month" class="translate">Month</label>
+                    <div class="month-control"><input type="month" id="month"><button id="now" title="Current month">&#128338;</button></div>
+                </div>
+                <div class="summary-item">
+                    <label for="expected" class="translate">Expected</label>
+                    <input type="text" id="expected" readonly>
+                </div>
+                <div class="summary-item">
+                    <label for="paid" class="translate">Paid</label>
+                    <input type="text" id="paid" readonly>
+                </div>
+                <div class="summary-item">
+                    <label for="remaining" class="translate">Remaining</label>
+                    <input type="text" id="remaining" readonly>
+                </div>
+            </div>
+        </aside>
+
+        <nav id="tab-picker" role="tablist">
+            <a href="#tab-pending" class="translate active" role="tab">Pending Bills</a>
+            <a href="#tab-income" class="translate" role="tab">Planned Income</a>
+            <a href="#tab-paid" class="translate" role="tab">Paid Bills</a>
+            <a href="#tab-graphs" class="translate" role="tab" disabled>Statistics</a>
+            <a href="#tab-settings" class="translate" role="tab">Settings</a>
+        </nav>
+
+        <main>
+            <section id="tab-pending" role="tabpanel" class="loading">
+                <h2 class="translate">Pending Bills</h2>
+                <p class="controls">
+                    <select class="benefactor-selector" hidden></select>
+                    <button class="schedule bill translate">Schedule Bill</button>
+                    <button class="unexpected bill translate">Unexpected Bill</button>
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="translate">Name</th>
+                            <th class="translate">Remaining Budget</th>
+                            <td>
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-bills">
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="tab-income" role="tabpanel" class="loading" hidden>
+                <h2 class="translate">Planned Income</h2>
+                <p class="controls">
+                    <select class="benefactor-selector" hidden></select>
+                    <button class="schedule income translate">Schedule Income</button>
+                    <button class="unexpected income translate">Unexpected Income</button>
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="translate">Name</th>
+                            <th class="translate">Expected</th>
+                            <th class="translate">Received</th>
+                            <td>
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody id="income">
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="tab-paid" role="tabpanel" class="loading" hidden>
+                <h2 class="translate">Paid Bills</h2>
+                <p class="controls">
+                        <select class="benefactor-selector" hidden></select>
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="translate">Name</th>
+                            <th class="translate">Expected Cost</th>
+                            <th class="translate">Actual Cost</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="paid-bills">
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="tab-graphs" role="tabpanel" class="loading" hidden>
+                <h2 class="translate">Statistics</h2>
+
+                <div class="input-group">
+                    <label for="graph-start" class="translate">Start Range</label>
+                    <input id="graph-start" type="month">
+                </div>
+
+                <div class="input-group">
+                    <label for="graph-end" class="translate">End Range</label>
+                    <input id="graph-end" type="month">
+                </div>
+
+                <div class="input-group">
+                    <label for="graph-scheduled" class="translate">Scheduled Only</label>
+                    <input id="graph-scheduled" type="checkbox" checked>
+                </div>
+
+                <div class="input-group">
+                    <label for="graph-summarize" class="translate">Summarise Small</label>
+                    <input id="graph-summarize" type="checkbox" checked>
+                </div>
+
+                <h3 class="translate">Expenses by Category</h3>
+                <canvas id="graph-expenses-per-category" width="792" height="528"></canvas>
+
+                <h3 id="title-expenses-per-month" class="translate" hidden>Expenses by Month</h3>
+                <canvas id="graph-expenses-per-month" width="792" height="528" hidden></canvas>
+            </section>
+
+            <section id="tab-settings" role="tabpanel" hidden>
+                <h2 class="translate">Settings</h2>
+
+                <div class="input-group">
+                    <label for="locale" class="translate">Language:</label>
+                    <select id="locale"></select>
+                </div>
+
+                <div class="input-group">
+                    <label for="currency" class="translate">Currency:</label>
+                    <select id="currency"></select>
+                </div>
+                <div class="input-group">
+                    <label for="excessive" class="translate">Excess Payment Margin:</label>
+                    <input id="excessive" type="number" step="1" min="0">
+                    <span class="after">%</span>
+                </div>
+                <hr>
+                <h2 class="translate">Backups</h2>
+                <p class="translate">All backups are encrypted with 256 bit AES-GCM encryption. You must provide a minimum 6 character password.</p>
+                <p class="translate">Please keep your backup passwords safe, they are not stored anywhere and your backup is useless without it.</p>
+                <p class="controls">
+                    <button id="export" class="translate">Create Backup</button>
+                    <button id="import" class="translate">Restore Backup</button>
+                </p>
+                <input type="file" id="backup" accept=".money" hidden>
+            </section>
+        </main>
+
+
+        <section id="unsupportedBrowser">
+            <h1>Unsupported Browser</h1>
+            Unfortunately it appears that your browser is not supported.<br>
+            Please use a modern browser such as
+            <a href="https://www.google.com/chrome/" rel="nofollow">Google Chrome</a>,
+            <a href="https://www.microsoft.com/microsoft-edge" rel="nofollow">Microsoft Edge</a> or
+            <a href="https://www.mozilla.org/firefox" rel="nofollow">Mozilla Firefox</a>.
+        </section>
+
+        <footer>
+            <hr>
+            <small>&copy; 2026 Kristian Williams</small>
+        </footer>
+
+        <script defer src="js/ha-storage.js"></script>
+        <script defer type="module" src="js/utils/extensions.js"></script>
+        <script defer type="module" src="js/ui.js"></script>
+    </body>
+</html>

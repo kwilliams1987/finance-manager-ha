@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^pytest -q tests$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^pytest -q tests; python -m compileall custom_components/finances tests$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

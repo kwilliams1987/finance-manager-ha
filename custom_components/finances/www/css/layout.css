@@ -1,0 +1,825 @@
+@import url('fonts.css');
+
+:root {
+    color-scheme: light dark;
+    --finance-bg: var(--primary-background-color, #f5f6f7);
+    --finance-surface: var(--card-background-color, #fff);
+    --finance-surface-raised: var(--secondary-background-color, #eef0f2);
+    --finance-text: var(--primary-text-color, #202124);
+    --finance-muted: var(--secondary-text-color, #626b73);
+    --finance-border: var(--divider-color, #d9dde1);
+    --finance-primary: var(--primary-color, #03a9f4);
+    --finance-primary-text: var(--text-primary-color, #fff);
+    --finance-positive: var(--success-color, #2e7d32);
+    --finance-warning: var(--warning-color, #ed9d00);
+    --finance-danger: var(--error-color, #db4437);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-width: 320px;
+    min-height: 100%;
+    color: var(--finance-text);
+    background: var(--finance-bg);
+    font-family: 'Open Sans', Roboto, 'Noto', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+html,
+body {
+    width: 100%;
+    margin: 0;
+}
+
+body {
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: var(--finance-text);
+    background: var(--finance-bg);
+    opacity: 1;
+    transition: opacity 180ms ease-out;
+}
+
+body.loading {
+    opacity: 0;
+}
+
+body > aside[role="region"],
+body > nav,
+body > main,
+body > footer {
+    position: static;
+    display: block;
+    width: min(100%, 1100px);
+    margin-inline: auto;
+}
+
+body > aside[role="region"] {
+    padding: 22px 28px 18px;
+    background: var(--finance-surface);
+    border-bottom: 1px solid var(--finance-border);
+}
+
+aside[role="region"] > div {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.15fr) repeat(3, minmax(120px, 0.75fr));
+    align-items: center;
+    gap: 8px 22px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    line-height: 1.4;
+}
+
+aside[role="region"] h1 {
+    grid-column: 1 / -1;
+    margin: 0 0 7px;
+    text-align: left;
+    font-size: 22px;
+    line-height: 1.3;
+    font-weight: 500;
+}
+
+aside[role="region"] .summary-item {
+    display: grid;
+    grid-template-rows: auto 38px;
+    align-content: end;
+    min-width: 0;
+}
+
+aside[role="region"] .month-control {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+}
+
+aside[role="region"] label {
+    display: block;
+    width: auto;
+    margin: 0 0 4px;
+    color: var(--finance-muted);
+    font-size: 12px;
+}
+
+aside[role="region"] input {
+    display: inline-block;
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+}
+
+#month {
+    width: calc(100% - 42px);
+    min-width: 0;
+}
+
+#now {
+    width: 38px;
+    min-height: 38px;
+    margin-left: 4px;
+    padding: 0;
+}
+
+aside[role="region"] input[readonly] {
+    border-color: transparent;
+    background: var(--finance-surface-raised);
+    font-weight: 600;
+}
+
+body > nav {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    padding: 0 28px;
+    overflow-x: auto;
+    background: var(--finance-surface);
+    border-bottom: 1px solid var(--finance-border);
+    scrollbar-width: thin;
+}
+
+nav a,
+nav a:visited,
+nav a:active {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 16px;
+    flex: 0 0 auto;
+    border-bottom: 2px solid transparent;
+    color: var(--finance-muted);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+nav a:hover {
+    color: var(--finance-text);
+    background: color-mix(in srgb, var(--finance-primary) 7%, transparent);
+}
+
+nav a.active {
+    border-bottom-color: var(--finance-primary);
+    color: var(--finance-primary);
+    font-weight: 600;
+}
+
+body > main {
+    width: min(calc(100% - 48px), 1044px);
+    min-height: 300px;
+    margin: 26px auto 22px;
+    padding: 0;
+}
+
+main > section {
+    min-width: 0;
+    animation: section-in 160ms ease-out;
+}
+
+main > section > h2 {
+    margin: 0 0 16px;
+    text-align: left;
+    font-size: 20px;
+    line-height: 1.35;
+    font-weight: 500;
+}
+
+main > section.loading {
+    position: relative;
+}
+
+main > section.loading:before {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: block;
+    background: color-mix(in srgb, var(--finance-bg) 70%, transparent);
+    content: '';
+}
+
+main > section.loading:after {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 2px solid var(--finance-border);
+    border-top-color: var(--finance-primary);
+    border-radius: 50%;
+    content: '';
+    animation: spinner 650ms linear infinite;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 14px;
+}
+
+.controls select,
+.controls button {
+    min-height: 38px;
+}
+
+.controls .benefactor-selector:not([hidden]) {
+    min-width: 180px;
+    margin-right: auto;
+}
+
+input,
+select,
+button {
+    max-width: 100%;
+    color: var(--finance-text);
+    font: inherit;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select {
+    min-height: 38px;
+    padding: 7px 10px;
+    border: 1px solid var(--finance-border);
+    border-radius: 4px;
+    background: var(--finance-surface);
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--finance-primary);
+    outline-offset: 2px;
+}
+
+button,
+input[type="submit"],
+input[type="reset"] {
+    min-height: 36px;
+    padding: 7px 14px;
+    border: 1px solid var(--finance-border);
+    border-radius: 4px;
+    background: var(--finance-surface);
+    color: var(--finance-text);
+    line-height: 1.35;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+button:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover {
+    background: var(--finance-surface-raised);
+    border-color: var(--finance-muted);
+}
+
+button:active,
+input[type="submit"]:active,
+input[type="reset"]:active {
+    transform: translateY(1px);
+}
+
+main table {
+    width: 100%;
+    padding: 0;
+    border-spacing: 0;
+    border-collapse: separate;
+    overflow: hidden;
+    border: 1px solid var(--finance-border);
+    border-radius: 6px;
+    background: var(--finance-surface);
+}
+
+main table th,
+main table td {
+    min-height: 42px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--finance-border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+main table thead th {
+    background: var(--finance-surface-raised);
+    color: var(--finance-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+main table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+main table tbody tr:hover:not(.empty) {
+    background: color-mix(in srgb, var(--finance-primary) 5%, var(--finance-surface));
+}
+
+main table tbody td:first-child {
+    padding-left: 14px;
+    font-weight: 600;
+}
+
+main table td:last-child {
+    text-align: right;
+    white-space: nowrap;
+}
+
+main tbody tr.ignored {
+    color: var(--finance-muted);
+    opacity: 0.7;
+}
+
+main tbody tr.partial {
+    background: color-mix(in srgb, var(--finance-warning) 12%, var(--finance-surface));
+}
+
+main tbody tr.excessive {
+    background: color-mix(in srgb, var(--finance-danger) 12%, var(--finance-surface));
+}
+
+main tbody span.benefactor {
+    display: inline-block;
+    margin-left: 6px;
+    color: var(--finance-muted);
+    font-size: 12px;
+    font-weight: 400;
+}
+
+main tbody span.benefactor:before {
+    content: '(';
+}
+
+main tbody span.benefactor:after {
+    content: ')';
+}
+
+main tbody .empty {
+    padding: 30px 14px;
+    color: var(--finance-muted);
+    text-align: center;
+    font-weight: 400;
+}
+
+#tab-settings {
+    line-height: 1.6;
+}
+
+#tab-settings > h2:not(:first-child) {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--finance-border);
+}
+
+#tab-settings > p {
+    max-width: 720px;
+    color: var(--finance-muted);
+}
+
+#tab-settings > hr {
+    display: none;
+}
+
+div.input-group {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(180px, 320px) auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 54px;
+    border-bottom: 1px solid var(--finance-border);
+    line-height: 1.45;
+}
+
+div.input-group label {
+    color: var(--finance-text);
+}
+
+div.input-group input,
+div.input-group select {
+    position: static;
+    width: 100%;
+}
+
+div.input-group input[type="checkbox"],
+div.input-group input[type="radio"] {
+    justify-self: start;
+    accent-color: var(--finance-primary);
+}
+
+div.input-group span.before {
+    position: absolute;
+    z-index: 1;
+    left: calc(100% - 306px);
+    width: 26px;
+    color: var(--finance-muted);
+    text-align: center;
+    pointer-events: none;
+}
+
+div.input-group span.before + input {
+    grid-column: 2;
+    padding-left: 32px;
+}
+
+div.input-group input + span.after {
+    position: absolute;
+    right: 12px;
+    color: var(--finance-muted);
+}
+
+dialog {
+    width: min(520px, calc(100vw - 32px));
+    max-height: min(85vh, 780px);
+    padding: 24px;
+    overflow-y: auto;
+    border: 1px solid var(--finance-border);
+    border-radius: 8px;
+    background: var(--finance-surface);
+    color: var(--finance-text);
+    box-shadow: 0 12px 40px #0003;
+    line-height: 1.6;
+}
+
+dialog::backdrop {
+    background: #10141880;
+    backdrop-filter: blur(2px);
+}
+
+dialog h3 {
+    margin: 0 0 18px;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+dialog label {
+    display: block;
+    margin: 10px 0 5px;
+    color: var(--finance-muted);
+    font-size: 13px;
+}
+
+dialog input:not([type="checkbox"]):not([type="radio"]),
+dialog select {
+    position: static;
+    display: block;
+    width: 100%;
+    min-height: 40px;
+}
+
+dialog label input[type="checkbox"],
+dialog label input[type="radio"] {
+    position: static;
+    width: auto;
+    margin-left: 8px;
+    accent-color: var(--finance-primary);
+}
+
+dialog div.input-group {
+    grid-template-columns: minmax(100px, 1fr) minmax(120px, 1fr) auto;
+    min-height: 64px;
+    margin: 8px 0;
+}
+
+dialog div.input-group span.before {
+    left: calc(50% + 5px);
+}
+
+dialog div.input-group span.before + input {
+    width: 100%;
+}
+
+dialog div.controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px;
+}
+
+dialog div.controls input[type="submit"],
+dialog div.controls input[type="reset"],
+dialog div.controls button {
+    width: auto;
+    min-width: 88px;
+    margin: 0;
+}
+
+dialog div.controls input[type="submit"] {
+    border-color: var(--finance-primary);
+    background: var(--finance-primary);
+    color: var(--finance-primary-text);
+}
+
+aside[role="dialog"] {
+    position: fixed;
+    z-index: 1000;
+    right: 16px;
+    bottom: 16px;
+    left: auto;
+    display: block;
+    width: min(420px, calc(100% - 32px));
+    padding: 16px 100px 16px 18px;
+    border: 1px solid var(--finance-border);
+    border-radius: 6px;
+    background: var(--finance-surface);
+    color: var(--finance-text);
+    box-shadow: 0 4px 18px #0003;
+}
+
+aside[role="dialog"] button {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    min-width: 64px;
+    transform: translateY(-50%);
+}
+
+body > footer {
+    padding: 8px 24px 18px;
+    color: var(--finance-muted);
+    text-align: center;
+    font-size: 12px;
+}
+
+body > footer hr {
+    margin: 0 0 12px;
+    border: 0;
+    border-top: 1px solid var(--finance-border);
+}
+
+footer a,
+footer a:visited {
+    color: var(--finance-primary);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+#unsupportedBrowser {
+    display: none;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.unsupported aside,
+.unsupported nav,
+.unsupported main,
+.unsupported hr {
+    display: none;
+}
+
+.unsupported #unsupportedBrowser {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: block;
+    padding: 30px;
+    background: var(--finance-bg);
+    color: var(--finance-text);
+    text-align: center;
+}
+
+.unsupported #unsupportedBrowser a {
+    white-space: nowrap;
+}
+
+.mobile {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --finance-bg: var(--primary-background-color, #111315);
+        --finance-surface: var(--card-background-color, #1c1f21);
+        --finance-surface-raised: var(--secondary-background-color, #282c2f);
+        --finance-text: var(--primary-text-color, #e1e3e4);
+        --finance-muted: var(--secondary-text-color, #a5abb0);
+        --finance-border: var(--divider-color, #383d40);
+        --finance-primary: var(--primary-color, #40c4ff);
+        --finance-primary-text: var(--text-primary-color, #101214);
+        --finance-positive: var(--success-color, #66bb6a);
+        --finance-warning: var(--warning-color, #ffca28);
+        --finance-danger: var(--error-color, #ef5350);
+    }
+}
+
+@media (max-width: 720px) {
+    body > aside[role="region"] {
+        padding: 18px 18px 14px;
+    }
+
+    aside[role="region"] > div {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px 12px;
+    }
+
+    aside[role="region"] > div > label[for="month"] {
+        grid-column: 1 / -1;
+    }
+
+    aside[role="region"] h1 {
+        margin-bottom: 2px;
+    }
+
+    body > nav {
+        padding-inline: 12px;
+    }
+
+    nav a,
+    nav a:visited,
+    nav a:active {
+        min-height: 44px;
+        padding-inline: 12px;
+    }
+
+    body > main {
+        width: calc(100% - 32px);
+        margin-top: 20px;
+    }
+
+    main table th,
+    main table td {
+        padding: 9px 8px;
+    }
+
+    main table tbody td:first-child {
+        padding-left: 9px;
+    }
+
+    div.input-group {
+        grid-template-columns: minmax(110px, 1fr) minmax(120px, 1fr) auto;
+    }
+
+    div.input-group span.before {
+        left: calc(100% - 264px);
+    }
+}
+
+@media (max-width: 460px) {
+    html {
+        font-size: 13px;
+    }
+
+    aside[role="region"] > div {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    aside[role="region"] .month-item {
+        grid-column: 1 / -1;
+    }
+
+    aside[role="region"] .summary-item {
+        grid-template-rows: auto 36px;
+    }
+
+    aside[role="region"] .month-item {
+        grid-template-rows: auto 38px;
+    }
+
+    body > nav {
+        gap: 0;
+        padding-inline: 6px;
+    }
+
+    nav a,
+    nav a:visited,
+    nav a:active {
+        min-height: 42px;
+        padding-inline: 10px;
+        font-size: 12px;
+    }
+
+    body > main {
+        width: calc(100% - 24px);
+        margin-top: 16px;
+    }
+
+    main > section > h2 {
+        margin-bottom: 12px;
+        font-size: 18px;
+    }
+
+    .controls {
+        gap: 6px;
+    }
+
+    .controls button {
+        flex: 1 1 auto;
+        padding-inline: 8px;
+    }
+
+    .controls .benefactor-selector:not([hidden]) {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    main table {
+        font-size: 12px;
+    }
+
+    main table th,
+    main table td {
+        padding: 8px 5px;
+    }
+
+    main table tbody td:first-child {
+        padding-left: 6px;
+    }
+
+    main table td:last-child {
+        white-space: normal;
+    }
+
+    main table td button {
+        min-height: 32px;
+        padding: 5px 7px;
+        font-size: 11px;
+    }
+
+    div.input-group {
+        grid-template-columns: 1fr minmax(115px, 45%);
+        gap: 8px;
+    }
+
+    div.input-group input[type="checkbox"],
+    div.input-group input[type="radio"] {
+        grid-column: 2;
+    }
+
+    div.input-group span.before {
+        left: auto;
+        right: calc(45% - 25px);
+    }
+
+    #tab-settings > p {
+        font-size: 12px;
+    }
+
+    dialog {
+        padding: 18px;
+    }
+
+    dialog div.input-group {
+        grid-template-columns: minmax(85px, 1fr) minmax(120px, 1fr) auto;
+    }
+
+    dialog div.input-group span.before {
+        left: calc(50% + 2px);
+    }
+
+    body > footer {
+        padding-inline: 12px;
+    }
+
+    .desktop {
+        display: none;
+    }
+
+    .mobile {
+        display: initial;
+    }
+}
+
+@media (max-width: 350px) {
+    main table {
+        font-size: 11px;
+    }
+
+    main table td button {
+        padding-inline: 5px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@keyframes spinner {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes section-in {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
