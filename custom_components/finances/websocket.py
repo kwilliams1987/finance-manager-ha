@@ -11,6 +11,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
+from .compatibility import normalize_legacy_recurrences
 from .const import DOMAIN
 
 _DATE = vol.All(cv.string, vol.Length(min=10, max=40))
@@ -46,6 +47,17 @@ _STATE = vol.Schema({
 
 
 def _validate_state(raw: dict[str, Any]) -> dict[str, Any]:
+    raw = normalize_legacy_recurrences(raw)
+    templates = raw.get("templates")
+    if isinstance(templates, list):
+        for index, template in enumerate(templates):
+            if isinstance(template, dict):
+                recurrence = template.get("recurrence")
+                if type(recurrence) is not int or recurrence not in range(6):
+                    raise vol.Invalid(
+                        f"Invalid recurrence {recurrence!r} for template {index}; "
+                        "expected an integer from 0 to 5"
+                    )
     state = _STATE(raw)
     try:
         date.fromisoformat(state["date"][:10])
