@@ -31,6 +31,17 @@ class Recurrence {
      */
     static get annually() { return 5; }
 
+    static get values() {
+        return [
+            { id: Recurrence.never, name: "Never" },
+            { id: Recurrence.monthly, name: "Monthly" },
+            { id: Recurrence.bimonthly, name: "Bi-Monthly" },
+            { id: Recurrence.quarterly, name: "Quarterly" },
+            { id: Recurrence.biannually, name: "Bi-Annually" },
+            { id: Recurrence.annually, name: "Annually" },
+        ];
+    }
+
     static fromBackup(value) {
         switch (value) {
             case 6:

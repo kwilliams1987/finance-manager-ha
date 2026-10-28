@@ -420,14 +420,10 @@ class PaymentEngine extends ITranslate {
     }
 
     get recurrences() {
-        return [
-            { id: Recurrence.never, name: this.translate("Never") },
-            { id: Recurrence.monthly, name: this.translate("Monthly") },
-            { id: Recurrence.bimonthly, name: this.translate("Bi-Monthly") },
-            { id: Recurrence.quarterly, name: this.translate("Quarterly") },
-            { id: Recurrence.biannually, name: this.translate("Bi-Annually") },
-            { id: Recurrence.annually, name: this.translate("Annually") },
-        ];
+        return Recurrence.values.map(({ id, name }) => ({
+            id,
+            name: this.translate(name),
+        }));
     }
 
     /**

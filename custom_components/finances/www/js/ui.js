@@ -878,10 +878,10 @@ document.querySelectorAll('main tbody').forEach(e => e.addEventListener('click',
                                         {
                                             node: "select",
                                             name: "recurrency",
-                                            children: engine.recurrencies.map(r => { return {
+                                            children: Recurrence.values.map(r => { return {
                                                 node: "option",
                                                 value: r.id,
-                                                text: r.name
+                                                text: engine.translate(r.name)
                                             }}),
                                             value: template.recurrence
                                         },
@@ -1194,10 +1194,10 @@ document.querySelectorAll('button.schedule').forEach(e => e.addEventListener('cl
                         {
                             node: "select",
                             name: "recurrency",
-                            children: engine.recurrencies.map(r => { return {
+                            children: Recurrence.values.map(r => { return {
                                 node: "option",
                                 value: r.id,
-                                text: r.name
+                                text: engine.translate(r.name)
                             }})
                         },
                         { node: "br" },
@@ -1263,4 +1263,3 @@ document.querySelectorAll('.benefactor-selector').forEach(e => e.addEventListene
     document.querySelectorAll('.benefactor-selector').forEach(e2 => e2.value = value);
     engine.benefactor = value === "" ? null : value;
 }));
-
