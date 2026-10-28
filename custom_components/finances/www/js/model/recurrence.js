@@ -30,6 +30,19 @@ class Recurrence {
      * This template recurs every twelve months from start to end.
      */
     static get annually() { return 5; }
+
+    static fromBackup(value) {
+        switch (value) {
+            case 6:
+            case "6":
+                return Recurrence.biannually;
+            case 12:
+            case "12":
+                return Recurrence.annually;
+            default:
+                return value;
+        }
+    }
 }
 
 export { Recurrence };

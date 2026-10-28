@@ -22,8 +22,8 @@ The integration exposes three monetary sensors for the app's selected month: `se
 
 When upgrading from the initial scaffold, existing transactions in Home Assistant's `.storage/finances.transactions` are migrated once into one-off payments. Expenses retain their positive amount and `Salary` entries are converted to the original app's negative-income convention.
 
-To move data from the original standalone app, create an encrypted backup there, open the Home Assistant panel, then use **Settings → Restore Backup**. The restored data is written to SQLite; the browser's localStorage is no longer read or used.
+To move data from the original standalone app, create an encrypted backup there, open the Home Assistant panel, then use **Settings → Restore Backup**. The importer converts legacy recurrence intervals of 6 and 12 months to the corresponding six-month and annual schedule types. The restored data is written to SQLite; the browser's localStorage is no longer read or used.
 
 ## Development checks
 
-Run `pytest -q tests` for SQLite persistence and migration tests. Run `python -m compileall custom_components/finances tests` for Python syntax validation.
+Run `pytest -q tests` for SQLite persistence and migration tests. Run `npm test` for JavaScript backup-compatibility tests. Run `python -m compileall custom_components/finances tests` for Python syntax validation.

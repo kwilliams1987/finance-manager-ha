@@ -471,9 +471,14 @@ class PaymentEngine extends ITranslate {
 
         let result = await Encryption.decrypt(password, encrypted);
 
-        JSON.parse(result);
+        const imported = JSON.parse(result);
+        if (Array.isArray(imported.templates)) {
+            imported.templates.forEach(template => {
+                template.recurrence = Recurrence.fromBackup(template.recurrence);
+            });
+        }
 
-        this[internal].storage = new MoneyStorage(result);
+        this[internal].storage = new MoneyStorage(imported);
         await this[save]();
         return version;
     }
