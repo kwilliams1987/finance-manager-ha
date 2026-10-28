@@ -16,6 +16,31 @@ const ThirdParty = {
  */
 let engine = {};
 
+let chartLibraryPromise;
+
+const loadChartLibrary = () => {
+    if (window.Chart) {
+        return Promise.resolve();
+    }
+
+    if (!chartLibraryPromise) {
+        chartLibraryPromise = new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = ThirdParty.ChartJs;
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = () => {
+                chartLibraryPromise = undefined;
+                script.remove();
+                reject(new Error("Unable to load the chart library"));
+            };
+            document.body.appendChild(script);
+        });
+    }
+
+    return chartLibraryPromise;
+};
+
 const recurrenceOptions = () => [
     [Recurrence.never, "Never"],
     [Recurrence.monthly, "Monthly"],
@@ -43,10 +68,12 @@ const handler = async e => {
     let pending = document.getElementById('pending-bills');
     let income = document.getElementById('income');
     let paid = document.getElementById('paid-bills');
+    let expensive = document.getElementById('expensive-bills');
 
     pending.clearChildren();
     income.clearChildren();
     paid.clearChildren();
+    expensive.clearChildren();
 
     await Promise.all([e.caller.getPayments(), e.caller.getTemplates()]).then(values => {
         let payments = values[0];
@@ -125,11 +152,15 @@ const handler = async e => {
                 name += ` <span class="benefactor">${o.benefactor}</span>`;
             }
 
+            let nameCell = amount === null
+                ? `<td>${name}</td>`
+                : `<td><button class="bill-history" title="${engine.translate("View bill payment history")}"><span class="history-indicator" aria-hidden="true">&#128200;</span>${name}</button></td>`;
+
             if (amount > 0 || cost > 0) {
                 if (isPaid || (o.partial && cost !== 0)) {
                     let row = `
                     <tr data-template-id="${o.id}">
-                        <td>${name}</td>
+                        ${nameCell}
                         <td>${amount === null ? '' : e.caller.formatCurrency(amount)}</td>
                         <td>${cost === 0 ? '' : e.caller.formatCurrency(cost)}</td>
                         <td>
@@ -162,7 +193,7 @@ const handler = async e => {
 
                     let row = `
                     <tr data-template-id="${o.id}">
-                        <td>${name}</td>
+                        ${nameCell}
                         <td>${e.caller.formatCurrency(remaining)}</td>
                         <td>
                             <button class="pay">${e.caller.translate("Pay")}</button>
@@ -293,6 +324,22 @@ const handler = async e => {
     document.getElementById('tab-pending').classList.remove('loading');
     document.getElementById('tab-income').classList.remove('loading');
     document.getElementById('tab-paid').classList.remove('loading');
+    document.getElementById('tab-expensive').classList.add('loading');
+
+    try {
+        await renderExpensiveBills(e.caller);
+    } catch (error) {
+        console.error("Unable to load expensive bills", error);
+        const row = document.createElement("tr");
+        row.className = "empty";
+        const cell = document.createElement("td");
+        cell.colSpan = 3;
+        cell.textContent = e.caller.translate("Unable to load expensive bills: {0}.", error.message);
+        row.appendChild(cell);
+        document.getElementById("expensive-bills").appendChild(row);
+    } finally {
+        document.getElementById('tab-expensive').classList.remove('loading');
+    }
 
     renderGraphs();
 }
@@ -313,6 +360,239 @@ const translate = engine => document.querySelectorAll(".translate").forEach(e =>
         e.innerHTML = translation;
     }
 });
+
+const renderExpensiveBills = async caller => {
+    const selected = caller.month;
+    const start = new Date(selected.getFullYear(), selected.getMonth() - 5, 1);
+    const end = new Date(selected.getFullYear(), selected.getMonth(), 1);
+    const [templates, payments] = await Promise.all([
+        caller.getTemplatesForPeriod(start, end),
+        caller.getPayments(start, end),
+    ]);
+    const paymentsByTemplate = new Map();
+
+    payments.filter(payment => payment.amount > 0).forEach(payment => {
+        const id = payment.templateId.value;
+        if (!paymentsByTemplate.has(id)) {
+            paymentsByTemplate.set(id, []);
+        }
+        paymentsByTemplate.get(id).push(payment);
+    });
+
+    const bills = new Map();
+    const benefactor = caller.benefactor;
+
+    for (let month = new Date(start); month <= end; month.setMonth(month.getMonth() + 1)) {
+        const monthKey = month.getTime();
+        templates.filter(template =>
+            template.amount > 0
+            && template.isDueInMonth(month)
+            && (benefactor === null || template.benefactor === benefactor)
+        ).forEach(template => {
+            const billKey = `${template.name}\u0000${template.benefactor || ""}`;
+            if (!bills.has(billKey)) {
+                bills.set(billKey, {
+                    name: template.name,
+                    benefactor: template.benefactor,
+                    months: new Map(),
+                });
+            }
+
+            const bill = bills.get(billKey);
+            if (!bill.months.has(monthKey)) {
+                bill.months.set(monthKey, {
+                    expected: 0,
+                    expectedStartTime: Number.NEGATIVE_INFINITY,
+                    actual: 0,
+                });
+            }
+
+            const totals = bill.months.get(monthKey);
+            const startTime = template.startDate
+                ? template.startDate.getTime()
+                : Number.NEGATIVE_INFINITY;
+            if (startTime >= totals.expectedStartTime) {
+                totals.expected = template.amount;
+                totals.expectedStartTime = startTime;
+            }
+            (paymentsByTemplate.get(template.id.value) || [])
+                .filter(payment =>
+                    payment.date.getFullYear() === month.getFullYear()
+                    && payment.date.getMonth() === month.getMonth()
+                )
+                .forEach(payment => {
+                    totals.actual += payment.amount;
+                });
+        });
+    }
+
+    const margin = 1 + caller.excessive / 100;
+    const overBudgetBills = Array.from(bills.values()).map(bill => {
+        const observedMonths = Array.from(bill.months.values())
+            .filter(month => month.actual > 0);
+
+        if (observedMonths.length < 2) {
+            return null;
+        }
+
+        const percentages = observedMonths.map(month =>
+            ((month.actual / month.expected) - 1) * 100
+        );
+        if (!observedMonths.every((month, index) =>
+            month.actual > month.expected * margin && percentages[index] > 0
+        )) {
+            return null;
+        }
+
+        return {
+            ...bill,
+            monthsOverBudget: observedMonths.length,
+            averageOverBudget: percentages.reduce((total, percentage) => total + percentage, 0)
+                / percentages.length,
+            totalOverrun: observedMonths.reduce(
+                (total, month) => total + month.actual - month.expected,
+                0
+            ),
+        };
+    }).filter(Boolean).sort((first, second) =>
+        second.averageOverBudget - first.averageOverBudget
+    );
+
+    const tbody = document.getElementById("expensive-bills");
+    if (overBudgetBills.length === 0) {
+        const row = document.createElement("tr");
+        row.className = "empty";
+        const cell = document.createElement("td");
+        cell.colSpan = 4;
+        cell.textContent = caller.translate("No consistently over-budget bills.");
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+    }
+
+    overBudgetBills.forEach(bill => {
+        const row = document.createElement("tr");
+        const name = document.createElement("td");
+        name.textContent = bill.benefactor
+            ? `${bill.name} (${bill.benefactor})`
+            : bill.name;
+        const months = document.createElement("td");
+        months.textContent = String(bill.monthsOverBudget);
+        const average = document.createElement("td");
+        average.textContent = `${bill.averageOverBudget.toFixed(1)}%`;
+        const total = document.createElement("td");
+        total.textContent = caller.formatCurrency(bill.totalOverrun);
+        row.append(name, months, average, total);
+        tbody.appendChild(row);
+    });
+};
+
+const showBillHistory = async template => {
+    const monthlyTotals = new Map();
+    engine.getPaymentHistory(template.id)
+        .filter(payment => payment.amount > 0)
+        .forEach(payment => {
+            const month = new Date(
+                payment.date.getFullYear(),
+                payment.date.getMonth(),
+                1
+            );
+            const key = month.getTime();
+            monthlyTotals.set(key, (monthlyTotals.get(key) || 0) + payment.amount);
+        });
+
+    const points = Array.from(monthlyTotals, ([timestamp, amount]) => ({
+        x: new Date(timestamp),
+        y: amount,
+    }))
+        .filter(point => point.y !== 0)
+        .sort((first, second) => first.x - second.x);
+
+    if (points.length === 0) {
+        await dialogs.alert("No payment history available for this bill.");
+        return;
+    }
+
+    try {
+        await loadChartLibrary();
+    } catch (error) {
+        await dialogs.alert("Unable to show bill history: {0}.", error.message);
+        return;
+    }
+
+    const dialog = elementTemplate({
+        node: "dialog",
+        class: "bill-history-dialog",
+        children: [
+            { node: "h3", text: engine.translate("{0} - Payment History", template.name) },
+            { node: "p", text: engine.translate("Monthly Amount Paid") },
+            { node: "div", class: "bill-history-chart", children: [
+                { node: "canvas", "aria-label": engine.translate("{0} monthly payment history", template.name) },
+            ] },
+            { node: "div", class: "controls", children: [
+                {
+                    node: "button",
+                    text: engine.translate("Close"),
+                    events: { click: () => dialog.close() },
+                },
+            ] },
+        ],
+    });
+    const canvas = dialog.querySelector("canvas");
+
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    const chart = new Chart(canvas, {
+        type: "scatter",
+        data: {
+            datasets: [
+                {
+                    label: engine.translate("Monthly Amount Paid"),
+                    data: points,
+                    backgroundColor: "rgba(3, 169, 244, 0.75)",
+                    borderColor: "rgb(3, 169, 244)",
+                    pointRadius: 4,
+                    showLine: true,
+                    fill: false,
+                    lineTension: 0.35,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            tooltips: {
+                callbacks: {
+                    label: item => engine.formatCurrency(item.yLabel),
+                },
+            },
+            scales: {
+                xAxes: [{
+                    type: "time",
+                    time: { unit: "month" },
+                    scaleLabel: {
+                        display: true,
+                        labelString: engine.translate("Month"),
+                    },
+                }],
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        callback: value => engine.formatCurrency(value),
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: engine.translate("Monthly Amount Paid"),
+                    },
+                }],
+            },
+        },
+    });
+    dialog.addEventListener("close", () => {
+        chart.destroy();
+        dialog.remove();
+    }, { once: true });
+};
 
 const maxSummaryDataPoints = 10;
 const renderGraphs = async () => {
@@ -575,12 +855,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('graph-end').value = date.toMonthString();
     document.getElementById('graph-start').value = date.toMonthString();
 
-    let graphs = document.createElement('script');
-    graphs.src = ThirdParty.ChartJs;
-    graphs.async = true;
-    graphs.onload = renderGraphs;
-
-    document.body.appendChild(graphs);
+    loadChartLibrary().then(renderGraphs, error => {
+        document.querySelector('[href="#tab-graphs"]').setAttribute('hidden', '');
+        console.error(error);
+    });
 });
 
 document.getElementById("graph-end").setAttribute('max', new Date().toMonthString());
@@ -764,6 +1042,11 @@ document.querySelectorAll('main tbody').forEach(e => e.addEventListener('click',
 
                 let templateId = e.target.closest("tr").dataset.templateId;
                 let template = await engine.getTemplate(templateId);
+
+                if (e.target.classList.contains("bill-history")) {
+                    await showBillHistory(template);
+                    return;
+                }
 
                 if (e.target.classList.contains("pay")) {
                     let options = {

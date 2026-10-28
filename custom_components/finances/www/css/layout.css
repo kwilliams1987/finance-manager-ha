@@ -327,6 +327,28 @@ main table tbody td:first-child {
     font-weight: 600;
 }
 
+main table tbody td:first-child .bill-history {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-weight: 600;
+    text-align: left;
+}
+
+main table tbody td:first-child .bill-history:hover {
+    border-color: transparent;
+    color: var(--finance-primary);
+    text-decoration: underline;
+}
+
+main table tbody td:first-child .history-indicator {
+    margin-right: 6px;
+    color: var(--finance-primary);
+}
+
 main table td:last-child {
     text-align: right;
     white-space: nowrap;
@@ -447,6 +469,16 @@ dialog {
     color: var(--finance-text);
     box-shadow: 0 12px 40px #0003;
     line-height: 1.6;
+}
+
+dialog.bill-history-dialog {
+    width: min(900px, calc(100vw - 32px));
+}
+
+dialog .bill-history-chart {
+    position: relative;
+    height: min(55vh, 440px);
+    min-height: 260px;
 }
 
 dialog::backdrop {

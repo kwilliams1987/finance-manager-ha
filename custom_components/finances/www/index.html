@@ -51,6 +51,7 @@
             <a href="#tab-pending" class="translate active" role="tab">Pending Bills</a>
             <a href="#tab-income" class="translate" role="tab">Planned Income</a>
             <a href="#tab-paid" class="translate" role="tab">Paid Bills</a>
+            <a href="#tab-expensive" class="translate" role="tab">Expensive Bills</a>
             <a href="#tab-graphs" class="translate" role="tab" disabled>Statistics</a>
             <a href="#tab-settings" class="translate" role="tab">Settings</a>
         </nav>
@@ -114,6 +115,23 @@
                         </tr>
                     </thead>
                     <tbody id="paid-bills">
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="tab-expensive" role="tabpanel" class="loading" hidden>
+                <h2 class="translate">Expensive Bills</h2>
+                <p class="translate">Bills paid over budget in each of at least two observed months in the last six months.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="translate">Bill</th>
+                            <th class="translate">Months Over Budget</th>
+                            <th class="translate">Average Over Budget</th>
+                            <th class="translate">Total Overrun</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensive-bills">
                     </tbody>
                 </table>
             </section>

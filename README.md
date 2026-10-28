@@ -12,6 +12,10 @@ It functionals mostly the same, except it stores the account data on the Homee A
 
 This means the data is "synced" to any device which can access the Home Assistant instance.
 
+Select a scheduled bill name in the Pending Bills or Paid Bills tab to view monthly totals of its recorded payments and a smoothed trend line. Partial payments are combined by month; previous changes to a scheduled amount are not available as history.
+
+The **Expensive Bills** tab lists scheduled bills that were paid over the configured excess-payment threshold in every observed payment month, requiring at least two observed months within the six-month window ending on the selected month. Months without a payment are not observations. Bills are sorted by average percentage over the scheduled amount; the total overrun column shows the sum of actual payments minus their scheduled amounts across those observed months, formatted in the configured currency.
+
 ## AI code disclosure
 
 Much of this project's porting infrastructure was done with the assistance of an LLM, make of that what you will.

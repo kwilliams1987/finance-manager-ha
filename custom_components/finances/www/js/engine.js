@@ -167,6 +167,20 @@ class PaymentEngine extends ITranslate {
         });
     }
 
+    getPaymentHistory(templateId) {
+        if (typeof templateId === "string") {
+            templateId = new Guid(templateId);
+        }
+
+        if (!(templateId instanceof Guid)) {
+            throw new TypeError("templateId must be a string or Guid");
+        }
+
+        return this[internal].storage.payments
+            .filter(payment => payment.templateId.equalTo(templateId))
+            .sort((first, second) => first.date - second.date);
+    }
+
     /**
      * Get templates for currently selected month.
      *
@@ -184,6 +198,24 @@ class PaymentEngine extends ITranslate {
                 return 0;
             });
         });
+    }
+
+    async getTemplatesForPeriod(start, end) {
+        if (!(start instanceof Date) || !(end instanceof Date) || start > end) {
+            throw new TypeError("start and end must be valid dates in ascending order");
+        }
+
+        const templates = new Map();
+        const month = new Date(start.getFullYear(), start.getMonth(), 1);
+        const lastMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+
+        while (month <= lastMonth) {
+            const due = await this[internal].storage.getTemplatesByMonth(month);
+            due.forEach(template => templates.set(template.id.value, template));
+            month.setMonth(month.getMonth() + 1);
+        }
+
+        return Array.from(templates.values());
     }
 
     /**
