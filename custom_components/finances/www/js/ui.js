@@ -16,6 +16,19 @@ const ThirdParty = {
  */
 let engine = {};
 
+const recurrenceOptions = () => [
+    [Recurrence.never, "Never"],
+    [Recurrence.monthly, "Monthly"],
+    [Recurrence.bimonthly, "Bi-Monthly"],
+    [Recurrence.quarterly, "Quarterly"],
+    [Recurrence.biannually, "Bi-Annually"],
+    [Recurrence.annually, "Annually"],
+].map(([id, name]) => ({
+    node: "option",
+    value: id,
+    text: engine.translate(name),
+}));
+
 /**
  *
  * @type {DialogManager}
@@ -878,11 +891,7 @@ document.querySelectorAll('main tbody').forEach(e => e.addEventListener('click',
                                         {
                                             node: "select",
                                             name: "recurrency",
-                                            children: Recurrence.values.map(r => { return {
-                                                node: "option",
-                                                value: r.id,
-                                                text: engine.translate(r.name)
-                                            }}),
+                                            children: recurrenceOptions(),
                                             value: template.recurrence
                                         },
                                         { node: "br" },
@@ -1194,11 +1203,7 @@ document.querySelectorAll('button.schedule').forEach(e => e.addEventListener('cl
                         {
                             node: "select",
                             name: "recurrency",
-                            children: Recurrence.values.map(r => { return {
-                                node: "option",
-                                value: r.id,
-                                text: engine.translate(r.name)
-                            }})
+                            children: recurrenceOptions()
                         },
                         { node: "br" },
                         {

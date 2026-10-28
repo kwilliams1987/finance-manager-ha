@@ -14,4 +14,4 @@ This means the data is "synced" to any device which can access the Home Assistan
 
 ## AI code disclosure
 
-Much of this project's porting infrastructuree was done with the assistance of an LLM, make of that what you will.
+Much of this project's porting infrastructure was done with the assistance of an LLM, make of that what you will.
